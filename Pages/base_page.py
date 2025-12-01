@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from selenium.common import TimeoutException
+from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 import selenium.webdriver.support.expected_conditions as EC
@@ -24,8 +24,15 @@ class BasePage:
 
     def find_element(self, locator: Locator) -> WebElement:
         try:
-            element = self.wait.until(EC.presence_of_element_located(locator))
+            element = self.wait.until(EC.visibility_of_element_located(locator))
             return element
+        except TimeoutException:
+            raise ElementNotFound(f"Cannot find element: {locator}")
+
+    def find_elements(self, locator: Locator) -> WebElement:
+        try:
+            elements = self.find_elements(locator)
+            return elements
         except TimeoutException:
             raise ElementNotFound(f"Cannot find element: {locator}")
 
@@ -44,4 +51,37 @@ class BasePage:
             return element
         except TimeoutException:
             raise ElementNotFound(f"Cannot find element: {locator}")
+    #get locator add to cart btn
+    @staticmethod
+    def add_to_cart_btn(product_name)-> Locator|None:
+        try:
+            return (
+                By.XPATH, f"//div[text()='{product_name}']/ancestor::div[@class = 'inventory_item']//button[text()='Add to cart']"
+            )
+        except NoSuchElementException:
+            print("No 'Add to cart' button found!")
+    #get locator remove btn
+    @staticmethod
+    def remove_from_cart_btn(product_name)-> Locator|None:
+        try:
+            return(
+                    By.XPATH, f"//div[text()='{product_name}']/ancestor::div[@class = 'inventory_item']//button[text()='Remove']"
+                )
+        except NoSuchElementException:
+            print("No 'Remove' button found!")
+
+    def is_element_not_present(self, locator: Locator) -> bool:
+        return len(self.driver.find_elements(*locator)) == 0
+
+    def wait_for_element_not_present(self,locator: Locator):
+        self.wait.until(EC.invisibility_of_element_located(locator))
+
+
+
+
+
+
+
+
+
 
